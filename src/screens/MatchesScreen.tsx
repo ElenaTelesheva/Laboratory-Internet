@@ -3,11 +3,14 @@ import { StyleSheet, View, Text, FlatList } from "react-native";
 import { MATCHES_URL } from "../config";
 import type { Match, MatchesResponse } from "../types";
 import { MatchCard } from "../components/MatchCard";
+import { useFavorites } from "../hooks/useFavorites";
 
 export function MatchesScreen() {
   const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const { isFavorite, toggle } = useFavorites();
 
   const load = async () => {
     setLoading(true);
@@ -39,7 +42,11 @@ export function MatchesScreen() {
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <View style={styles.listItem}>
-            <MatchCard match={item} />
+            <MatchCard
+              match={item}
+              isFavorite={isFavorite(item.id)}
+              onToggleFavorite={() => toggle(item.id)}
+            />
           </View>
         )}
         contentContainerStyle={styles.list}

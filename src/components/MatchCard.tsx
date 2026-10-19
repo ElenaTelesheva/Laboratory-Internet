@@ -1,8 +1,11 @@
 import { StyleSheet, Text, View } from "react-native";
+import { FavoriteButton } from "./FavoriteButton";
 import type { Match, MatchStatus } from "../types";
 
 type Props = {
   match: Match;
+  isFavorite: boolean;
+  onToggleFavorite: () => void;
 };
 
 const STATUS_LABEL: Record<MatchStatus, string> = {
@@ -35,13 +38,14 @@ function formatStatus(match: Match): string {
   return STATUS_LABEL[match.status];
 }
 
-export function MatchCard({ match }: Props) {
+export function MatchCard({ match, isFavorite, onToggleFavorite }: Props) {
   return (
     <View style={styles.card}>
       <View style={styles.header}>
         <Text style={styles.teams}>
           {match.home.name} — {match.away.name}
         </Text>
+        <FavoriteButton active={isFavorite} onPress={onToggleFavorite} />
       </View>
 
       <Text style={styles.score}>{formatScore(match)}</Text>
