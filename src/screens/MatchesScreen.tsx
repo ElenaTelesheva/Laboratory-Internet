@@ -6,11 +6,13 @@ import {
   FlatList,
   ActivityIndicator,
   Pressable,
+  ImageBackground,
 } from "react-native";
 import { MATCHES_URL } from "../config";
 import type { Match, MatchesResponse, Filter } from "../types";
 import { MatchCard } from "../components/MatchCard";
 import { FilterTabs } from "../components/FilterTabs";
+import { UpdatedAgo } from "../components/UpdatedAgo";
 import { useFavorites } from "../hooks/useFavorites";
 import { compareMatches, filterMatches } from "../utils/matches";
 
@@ -23,6 +25,8 @@ export function MatchesScreen() {
 
   const [filter, setFilter] = useState<Filter>("all");
 
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+
   const load = async () => {
     setLoading(true);
     setError(null);
@@ -31,7 +35,7 @@ export function MatchesScreen() {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data: MatchesResponse = await res.json();
       setMatches(data.matches);
-      console.log(data.matches);
+      setLastUpdated(new Date());
     } catch (e) {
       setError(e instanceof Error ? e.message : "Не удалось загрузить матчи");
     } finally {
@@ -84,44 +88,68 @@ export function MatchesScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Матчи тура</Text>
+    <ImageBackground
+      source={require("../../assets/football.jpg")}
+      resizeMode="cover"
+      style={styles.background}
+    >
+      <View style={styles.overlay}>
+        <View style={styles.container}>
+          <Text style={styles.title}>Матчи тура</Text>
 
-      <View style={styles.panel}>
-        <FilterTabs value={filter} onChange={setFilter} counts={counts} />
-      </View>
-      <FlatList
-        data={filtered}
-        numColumns={2}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View style={styles.listItem}>
-            <MatchCard
-              match={item}
-              isFavorite={isFavorite(item.id)}
-              onToggleFavorite={() => toggle(item.id)}
-            />
+          <View style={styles.panel}>
+            <FilterTabs value={filter} onChange={setFilter} counts={counts} />
           </View>
-        )}
-        contentContainerStyle={styles.list}
-        columnWrapperStyle={styles.listRow}
-        ListEmptyComponent={
-          <Text style={styles.empty}>Нет матчей по выбранному фильтру</Text>
-        }
-      />
-    </View>
+          <FlatList
+            data={filtered}
+            numColumns={2}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <View style={styles.listItem}>
+                <MatchCard
+                  match={item}
+                  isFavorite={isFavorite(item.id)}
+                  onToggleFavorite={() => toggle(item.id)}
+                />
+              </View>
+            )}
+            contentContainerStyle={styles.list}
+            columnWrapperStyle={styles.listRow}
+            ListEmptyComponent={
+              <Text style={styles.empty}>Нет матчей по выбранному фильтру</Text>
+            }
+          />
+          <View style={styles.update}>
+            {lastUpdated && <UpdatedAgo since={lastUpdated} />}
+            <Pressable onPress={load} style={styles.retry}>
+              <Text style={styles.retryText}>Обновить</Text>
+            </Pressable>
+          </View>
+        </View>
+      </View>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
+  background: {
+    width: "100%",
+    height: "100%",
+    objectFit: "contain",
+  },
+  overlay: {
+    backgroundColor: "#0000007f",
+    height: "100%",
+  },
   container: {
+    width: "100%",
+    maxWidth: 800,
     flex: 1,
     padding: 16,
+    gap: 24,
+    margin: "auto",
   },
-  title: {
-    fontSize: 24,
-    fontWeight: "700",
-  },
+  title: { fontSize: 60, fontWeight: "700", color: "white" },
   list: { gap: 8, paddingBottom: 24 },
   listRow: { gap: 8 },
   listItem: { flex: 1, width: "100%", maxWidth: "50%" },
@@ -140,5 +168,12 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "flex-end",
     flexWrap: "wrap",
+  },
+  update: {
+    flexDirection: "row",
+    gap: 8,
+    justifyContent: "flex-end",
+    alignItems: "center",
+    width: "100%",
   },
 });
