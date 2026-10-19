@@ -1,5 +1,12 @@
 import { useEffect, useState } from "react";
-import { StyleSheet, View, Text, FlatList } from "react-native";
+import {
+  StyleSheet,
+  View,
+  Text,
+  FlatList,
+  ActivityIndicator,
+  Pressable,
+} from "react-native";
 import { MATCHES_URL } from "../config";
 import type { Match, MatchesResponse } from "../types";
 import { MatchCard } from "../components/MatchCard";
@@ -31,6 +38,37 @@ export function MatchesScreen() {
   useEffect(() => {
     load();
   }, []);
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.title}>Матчи тура</Text>
+        <ActivityIndicator />
+        <Text>Загрузка...</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.title}>Матчи тура</Text>
+        <Text style={styles.error}>Ошибка: {error}</Text>
+        <Pressable onPress={() => load()} style={styles.retry}>
+          <Text style={styles.retryText}>Повторить</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
+  if (matches.length === 0) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.title}>Матчи тура</Text>
+        <Text>Матчей нет</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -72,4 +110,12 @@ const styles = StyleSheet.create({
   listRow: { gap: 8 },
   listItem: { flex: 1, width: "100%", maxWidth: "50%" },
   empty: { textAlign: "center", color: "#6b7280", paddingVertical: 24 },
+  error: { color: "#b91c1c" },
+  retry: {
+    padding: 12,
+    backgroundColor: "#ef3124",
+    borderRadius: 12,
+    alignSelf: "flex-start",
+  },
+  retryText: { color: "#fff", fontWeight: "600" },
 });
