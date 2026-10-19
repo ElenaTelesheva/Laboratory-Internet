@@ -8,9 +8,11 @@ import {
   Pressable,
 } from "react-native";
 import { MATCHES_URL } from "../config";
-import type { Match, MatchesResponse } from "../types";
+import type { Match, MatchesResponse, Filter } from "../types";
 import { MatchCard } from "../components/MatchCard";
+import { FilterTabs } from "../components/FilterTabs";
 import { useFavorites } from "../hooks/useFavorites";
+import { compareMatches, filterMatches } from "../utils/matches";
 
 export function MatchesScreen() {
   const [matches, setMatches] = useState<Match[]>([]);
@@ -18,6 +20,8 @@ export function MatchesScreen() {
   const [error, setError] = useState<string | null>(null);
 
   const { isFavorite, toggle } = useFavorites();
+
+  const [filter, setFilter] = useState<Filter>("all");
 
   const load = async () => {
     setLoading(true);
@@ -70,12 +74,24 @@ export function MatchesScreen() {
     );
   }
 
+  const filtered = filterMatches(matches, filter).sort(compareMatches);
+
+  const counts: Record<Filter, number> = {
+    all: matches.length,
+    live: filterMatches(matches, "live").length,
+    upcoming: filterMatches(matches, "upcoming").length,
+    finished: filterMatches(matches, "finished").length,
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Матчи тура</Text>
 
+      <View style={styles.panel}>
+        <FilterTabs value={filter} onChange={setFilter} counts={counts} />
+      </View>
       <FlatList
-        data={matches}
+        data={filtered}
         numColumns={2}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
@@ -118,4 +134,11 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start",
   },
   retryText: { color: "#fff", fontWeight: "600" },
+  panel: {
+    flexDirection: "row",
+    gap: 8,
+    justifyContent: "space-between",
+    alignItems: "flex-end",
+    flexWrap: "wrap",
+  },
 });

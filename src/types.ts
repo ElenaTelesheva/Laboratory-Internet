@@ -25,3 +25,5 @@ export interface MatchesResponse {
   round: number;
   matches: Match[];
 }
+
+export type Filter = 'all' | 'upcoming' | 'live' | 'finished';
